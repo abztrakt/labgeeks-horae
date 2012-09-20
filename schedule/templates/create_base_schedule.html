@@ -3,7 +3,7 @@
 {% block pageJS %}
 <script type="text/javascript" src="/static/js/jquery.tools.min.js"></script>
 <script type="text/javascript" src="/static/js/jquery.ui.timepicker.js"></script>
-<script type="text/javascript" src="/static/js/schedule.js"></script>
+<script type="text/javascript" src="/static/js/base_schedule.js"></script>
 
 {% endblock %}
 {% block content %}
@@ -19,7 +19,7 @@
 
     <form action="" method="post" id="create_daily_schedule">{% csrf_token %}
         <label class="input_label">
-            <strong>These are default shifts that will be used during the timeperiod. They will help build a base schedule.</strong>
+            <strong>These are base shifts that will be used during the timeperiod. They are used to signify which hours need to be filled by a default shift and what rules those default shifts must follow.</strong>
         </label>
         
         <label class="input_label">
@@ -71,31 +71,22 @@
                     <div class="hours_toolbar">
                         <form>
                             <div>
-                                <strong>Closing hours:</strong>
-                                <input class="closing_starting_hours time_input" type="text" />
-                                <input class="closing_ending_hours time_input" type="text" />
-                                <button class="add_closing_hours" type="button">Add closing hours</button>
-                                <button class="remove_closing_hours" type="button">Remove closing hours</button>
-                            </div>
-
-                            <div>
-                                <strong>Employee hours:</strong>
-                                <select class="add_person"></select>
-                                <input class="employee_starting_hours time_input" type="text" />
-                                <input class="employee_ending_hours time_input" type="text" />
-                                <button class="add_employee_hours" type="button">Add employee hours</button>
-                                <button class="remove_employee_hours" type="button">Remove employee hours</button>
-                            </div>
+                                <strong>Action:</strong>
+                                <input id='remove' type="checkbox" /><span id='remove_box'>Remove</span>
+                                <input id='add_replace' type="checkbox"/><span id='add_box'>Add/Replace</span>
+                                <span id='add_shift'>Shift Type:
+                                <select class="add_shift"><option selected="selected">Open_Shift</option>{% for shift in shift_types %}<option>{{shift.name}}</option>{% endfor %}</select></span>
+                        </div>
                         </form>
                     </div>
                 {% endif %}
                 <div class="schedule_grid"> 
                     {% for times in grid.times %}
                         <div class="schedule_row">
-                            <div class="schedule_row_content">{{times.time}}</div>
+                            <div class="schedule_row_hours">{{times.time}}</div>
 
                             {% for elem in times.row  %}
-                                <div class="schedule_row_content {{elem.class}}">{% if elem.user %}{{elem.user}}{% endif %}</div>
+                                <div class="schedule_row_content {{elem.class}}">{% if elem.name %}{{elem.name}}{% endif %}</div>
                             {% endfor %}
                         </div>
                     {% endfor %}

@@ -182,6 +182,104 @@ def view_people(request):
     return HttpResponse(result)
 
 
+def create_base_schedule(request):
+    '''
+    This view will allow users to create a schedule from scratch.
+    '''
+
+    if request.method == 'POST':
+        form = CreateDailyScheduleForm(request.POST)
+        if form.is_valid():
+
+            # Grab the data from the form
+            timeperiod = TimePeriod.objects.get(name=form.cleaned_data['timeperiods'])
+            location = Location.objects.get(name=form.cleaned_data['location'])
+
+            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+            # Create a schedule dictionary to hold the data.
+            schedule = []
+
+            # Grab the closed hours and default shifts used in a timeperiod.
+            base_shifts = BaseShift.objects.filter(location=location, timeperiod=timeperiod)
+            time_in = time(7, 45)
+            time_out = time(11, 45)
+
+            shift_types = ShiftType.objects.all()
+
+            base_shift_ranges = {
+                'Monday': [],
+                'Tuesday': [],
+                'Wednesday': [],
+                'Thursday': [],
+                'Friday': [],
+                'Saturday': [],
+                'Sunday': [],
+            }
+            for shift in base_shifts:
+                day = shift.day
+                in_time = shift.in_time
+                out_time = shift.out_time
+                column = shift.column
+                hours = []
+
+                current = datetime(1, 1, 1, in_time.hour, in_time.minute)
+
+                while current.time() != out_time:
+                    hours.append(current.time())
+                    current += timedelta(minutes=30)
+                if shift.shift_type:
+                    base_shift_ranges[day].append({'hours': hours, 'name': shift.shift_type.name, 'column': column})
+                else:
+                    base_shift_ranges[day].append({'hours': hours, 'name': 'Open_Shift', 'column': column})
+
+            # TODO: For now, create an arbitrary size for the schedule. Consider changing it in the future.
+            schedule_length = [0] * 10
+            for day in days:
+                base_shift_range = base_shift_ranges[day]
+                times = []
+                base_times = []
+                counter = datetime(1, 1, 1, 7, 45)
+
+                # Loop through the time and start appending the rows to each time.
+                while counter.hour != 0:
+                    base_row = []
+                    # Fill in the shift hours.
+                    count = 1
+                    for shift in base_shift_range:
+                        if counter.time() in shift['hours']:
+                            while count < shift['column']:
+                                base_row.append({'class': count, 'name': None})
+                                count += 1
+
+                            base_row.append({'class': count, 'name': shift['name']})
+                            count += 1
+                    for i in range(len(schedule_length) - count + 1):
+                        base_row.append({'class': count + i, 'name': None})
+
+                    # Append the row and time
+                    base_times.append({'time': counter.time().strftime('%I:%M %p').lower(), 'row': base_row})
+
+                    # Increment by 30 minutes
+                    counter += timedelta(minutes=30)
+
+                # Append the time row to the schedule.
+                schedule.append({'times': base_times, 'day': day})
+            schedule_class = "visible"
+
+            # Determine if the user can edit the schedule.
+            if request.user.has_perm('schedule.add_defaultshift'):
+                can_edit_schedule = True
+            else:
+                can_edit_scehdule = False
+    else:
+        # There is no schedule to display.
+        schedule_class = "hidden"
+        form = CreateDailyScheduleForm()
+
+    return render_to_response('create_base_schedule.html', locals(), context_instance=RequestContext(request))
+
+
 def create_default_schedule(request):
     '''
     This view will allow users to create a schedule from scratch.
@@ -322,6 +420,7 @@ def create_default_schedule(request):
                     day = shift.day
                     in_time = shift.in_time
                     out_time = shift.out_time
+                    column = shift.column
                     hours = []
 
                     current = datetime(1, 1, 1, in_time.hour, in_time.minute)
@@ -330,7 +429,7 @@ def create_default_schedule(request):
                         hours.append(current.time())
                         current += timedelta(minutes=30)
 
-                    shift_ranges[day].append({'hours': hours, 'user': shift.person.username})
+                    shift_ranges[day].append({'hours': hours, 'column': column, 'user': shift.person.username})
             # TODO: For now, create an arbitrary size for the schedule. Consider changing it in the future.
             schedule_length = [0] * 10
 
@@ -363,15 +462,17 @@ def create_default_schedule(request):
 
                         for i in range(len(schedule_length) - count):
                             base_row.append({'class': None, 'user': None})
-                        count = 0
+                        count = 1
                         for shift in shift_range:
 
                             if counter.time() in shift['hours']:
+                                while count < shift['column']:
+                                    row.append({'class': count, 'user': None})
+                                    count += 1
+                                row.append({'class': count, 'user': shift['user']})
                                 count += 1
-                                row.append({'class': None, 'user': shift['user']})
-
-                        for i in range(len(schedule_length) - count):
-                            row.append({'class': None, 'user': None})
+                        for i in range(len(schedule_length) - count + 1):
+                            row.append({'class': count + i, 'user': None})
 
                     # Append the row and time
                     times.append({'time': counter.time().strftime('%I:%M %p').lower(), 'row': row})
@@ -399,7 +500,60 @@ def create_default_schedule(request):
     return render_to_response('create_schedule.html', locals(), context_instance=RequestContext(request))
 
 
-def save_hours(request):
+def save_base_hours(request):
+    data = request.POST.copy()
+    shift_type = data.getlist('type')[0]
+    column = data.getlist('column')[0][1:]
+    day = data.getlist('day')[0]
+    hours = data.getlist('hours')
+    loc = data.getlist('location')[0]
+    tp = data.getlist('timeperiod')[0]
+    location = Location.objects.get(name=loc)
+    timeperiod = TimePeriod.objects.get(name=tp)
+    if shift_type == 'Open_Shift':
+        shift_type = None
+    else:
+        shift_type = ShiftType.objects.get(name=shift_type)
+    tmpdsdate = timeperiod.start_date
+    mondays = []
+    tuesdays = []
+    wednesdays = []
+    thursdays = []
+    fridays = []
+    saturdays = []
+    sundays = []
+    BaseShift.objects.filter(location=location, timeperiod=timeperiod, day=day, shift_type=shift_type, column=column).delete()
+    result = {}
+
+    if len(hours) > 0:
+        time_ranges = return_base_time_ranges(hours)
+        for time_range in time_ranges:
+            in_time = time_range['in_time'].time()
+            out_time = time_range['out_time'].time()
+            employee_hour = BaseShift.objects.create(
+                shift_type=shift_type,
+                day=day,
+                in_time=in_time,
+                out_time=out_time,
+                location=location,
+                timeperiod=timeperiod,
+                column=column,
+            )
+            if shift_type:
+                string_time = {'shift_type': shift_type.name, 'in_time': time_range['in_time_string'], 'out_time': time_range['out_time_string'], 'column': column}
+            else:
+                string_time = {'shift_type': 'Open_Shift', 'in_time': time_range['in_time_string'], 'out_time': time_range['out_time_string'], 'column': column}
+            try:
+                result[day].append(string_time)
+            except:
+                result[day] = [string_time]
+
+    # Return the results and let the ajax call handle this data.
+    result = json.dumps(result)
+    return HttpResponse(result)
+
+
+def save_default_hours(request):
     '''
     This method is used to process an ajax request and save the closed hours in the schedule app.
     '''
@@ -459,10 +613,11 @@ def save_hours(request):
         else:
             ClosedHour.objects.filter(location=location, timeperiod=timeperiod, day=day).delete()
         if len(hours_list) > 0:
-            time_ranges = return_time_ranges(hours_list)
+            time_ranges = return_default_time_ranges(hours_list)
             for time_range in time_ranges:
                 in_time = time_range['in_time'].time()
                 out_time = time_range['out_time'].time()
+                column = time_range['column'][1:]
                 # Save the hours, depending on which type of hours they are.
                 if user:
                     week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -490,6 +645,7 @@ def save_hours(request):
                         out_time=out_time,
                         location=location,
                         timeperiod=timeperiod,
+                        column=column
                     )
                     name = user.username
                 else:
@@ -515,7 +671,53 @@ def save_hours(request):
     return HttpResponse(result)
 
 
-def return_time_ranges(hours_list):
+def return_default_time_ranges(hours_list):
+    # TIME FORMATTING:
+    time_format = '%I:%M %p'
+    time_ranges = []
+
+    in_time = None
+    out_time = None
+    hours_list1 = []
+    for hour in hours_list:
+        hour = hour.split(',')
+        hour[0] = datetime.strptime(hour[0], time_format)
+        hours_list1.append(hour)
+    hours_list1.sort()
+    for hour in hours_list1:
+        #current = datetime.strptime(hour,time_format)
+        current = hour[0]
+        new_column = hour[1]
+        if not in_time and not out_time:
+            column = hour[1]
+            in_time = current
+            out_time = current
+            if out_time.minute == 45:
+                out_time = out_time.replace(hour=out_time.hour + 1, minute=15)
+            elif out_time.minute == 15:
+                out_time = out_time.replace(minute=45)
+        elif (current == out_time and new_column == column):
+            if out_time.minute == 45:
+                out_time = out_time.replace(hour=out_time.hour + 1, minute=15)
+            elif out_time.minute == 15:
+                out_time = out_time.replace(minute=45)
+        else:
+            time_range = {'in_time': in_time, 'out_time': out_time, 'in_time_string': in_time.strftime('%I:%M %p').lower(), 'out_time_string': out_time.strftime('%I:%M %p').lower(), 'column': column}
+            time_ranges.append(time_range)
+            in_time = current
+            out_time = current
+            column = new_column
+            if out_time.minute == 45:
+                out_time = out_time.replace(hour=out_time.hour + 1, minute=15)
+            elif out_time.minute == 15:
+                out_time = out_time.replace(minute=45)
+    time_range = {'in_time': in_time, 'out_time': out_time, 'in_time_string': in_time.strftime('%I:%M %p').lower(), 'out_time_string': out_time.strftime('%I:%M %p').lower(), 'column': column}
+    time_ranges.append(time_range)
+
+    return time_ranges
+
+
+def return_base_time_ranges(hours_list):
     '''
     This method will return a hour ranges from a list of hours.
     e.g. hours_list = [9:00,9:30,10:00,1:00,1:30,2:00] will return [{'in_time': 9:00, 'out_time':10:00} {'in_time': 1:00, 'out_time': 2:00}]
