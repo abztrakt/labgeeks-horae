@@ -276,6 +276,8 @@ def create_base_schedule(request):
         # There is no schedule to display.
         schedule_class = "hidden"
         form = CreateDailyScheduleForm()
+        form.fields['timeperiods'].choices = [(tp.name, tp.name) for tp in TimePeriod.objects.all()]
+        form.fields['location'].choices = [(loc.name, loc.name) for loc in Location.objects.all()]
 
     return render_to_response('create_base_schedule.html', locals(), context_instance=RequestContext(request))
 
@@ -496,6 +498,8 @@ def create_default_schedule(request):
         # There is no schedule to display.
         schedule_class = "hidden"
         form = CreateDailyScheduleForm()
+        form.fields['timeperiods'].choices = [(tp.name, tp.name) for tp in TimePeriod.objects.all()]
+        form.fields['location'].choices = [(loc.name, loc.name) for loc in Location.objects.all()]
 
     return render_to_response('create_schedule.html', locals(), context_instance=RequestContext(request))
 
