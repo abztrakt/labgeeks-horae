@@ -1,35 +1,13 @@
 from django.conf.urls.defaults import *
-import os
-import settings
 
-# Uncomment the next two lines to enable the admin:
-from django.contrib import admin
-admin.autodiscover()
-
-urlpatterns = patterns('',
-                       # (r'^accounts/login/$', 'django.contrib.auth.views.login'),
-                       (r'^login/$', 'labgeeksrpg.views.labgeeks_login'),
-                       (r'^logout/$', 'labgeeksrpg.views.labgeeks_logout'),
-                       (r'^inactive/$', 'labgeeksrpg.views.inactive'),
-                       # Example:
-                       # (r'^labgeeksrpg/', include('labgeeksrpg.foo.urls')),
-                       (r'^chronos/', include('labgeeksrpg.chronos.urls')),
-                       (r'^people/', include('labgeeksrpg.people.urls')),
-                       (r'^schedule/', include('labgeeksrpg.schedule.urls')),
-                       (r'^delphi/', include('labgeeksrpg.delphi.urls')),
-                       (r'^pythia/', include('labgeeksrpg.pythia.urls')),
-                       (r'^$', 'labgeeksrpg.views.hello'),
-                       (r'^oracles/', include('labgeeksrpg.sybil.urls')),
-                       # Uncomment the admin/doc line below and add 'django.contrib.admindocs'
-                       # to INSTALLED_APPS to enable admin documentation:
-                       # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-                       # Uncomment the next line to enable the admin:
-                       (r'^admin/', include(admin.site.urls)),
+urlpatterns = patterns('labgeeksrpg.schedule.views',
+                       url(r'^view_preferences/$', 'view_preferences', name="Schedule-View_Prefs"),
+                       url(r'^create/$', 'create_default_schedule', name="Schedule-Create_Schedule"),
+                       url(r'^shifts/$', 'view_shifts', name="Schedule-View_Shifts"),
+                       url(r'^available/$', 'view_available_shifts', name="Schedule-View_Avail"),
+                       url(r'^timeperiods/$', 'view_timeperiods', name="Schedule-View_Timeperiods"),
+                       (r'^create/save/$', 'save_hours'),
+                       (r'^people/$', 'view_people'),
+                       (r'^timeperiods/info/$', 'view_timeperiod_data'),
+                       (r'^$', 'list_options'),
                        )
-
-# only serve static files through the django server if debug is enabled. Only for development instances.
-if settings.DEBUG:
-    urlpatterns += patterns('',
-                            (r'^uploads/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
-                            )
