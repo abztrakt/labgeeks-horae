@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User, Group
-from labgeeksrpg.chronos.models import Location
+from labgeeks_chronos.models import Location
 from datetime import date, time
 
 

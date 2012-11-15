@@ -4,10 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.context_processors import csrf
 from django.http import HttpResponse, HttpResponseRedirect
-from people.models import UserProfile
-from chronos.models import Location
-from schedule.models import *
-from schedule.forms import SelectTimePeriodForm, SelectDailyScheduleForm, CreateDailyScheduleForm
+from labgeeks_people.models import UserProfile
+from labgeeks_chronos.models import Location
+from labgeeks_schedule.models import *
+from labgeeks_schedule.forms import SelectTimePeriodForm, SelectDailyScheduleForm, CreateDailyScheduleForm
 from django import forms
 import json
 from datetime import date, datetime, timedelta
