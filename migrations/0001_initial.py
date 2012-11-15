@@ -9,20 +9,20 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         
         # Adding model 'WorkShift'
-        db.create_table('labgeeks_schedule_workshift', (
+        db.create_table('labgeeks_horae_workshift', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('person', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, blank=True)),
             ('scheduled_in', self.gf('django.db.models.fields.DateTimeField')()),
             ('scheduled_out', self.gf('django.db.models.fields.DateTimeField')()),
             ('location', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['labgeeks_chronos.Location'])),
         ))
-        db.send_create_signal('labgeeks_schedule', ['WorkShift'])
+        db.send_create_signal('labgeeks_horae', ['WorkShift'])
 
 
     def backwards(self, orm):
         
         # Deleting model 'WorkShift'
-        db.delete_table('labgeeks_schedule_workshift')
+        db.delete_table('labgeeks_horae_workshift')
 
 
     models = {
@@ -68,7 +68,7 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'labgeeks_schedule.workshift': {
+        'labgeeks_horae.workshift': {
             'Meta': {'object_name': 'WorkShift'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'location': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_chronos.Location']"}),
@@ -78,4 +78,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['labgeeks_schedule']
+    complete_apps = ['labgeeks_horae']

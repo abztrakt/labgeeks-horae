@@ -4,25 +4,25 @@ from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
 from labgeeks_chronos.models import Location
-from labgeeks_schedule.models import TimePeriod
+from labgeeks_horae.models import TimePeriod
 
 
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
         # Deleting field 'ShiftType.location'
-        db.delete_column('labgeeks_schedule_shifttype', 'location_id')
+        db.delete_column('labgeeks_horae_shifttype', 'location_id')
 
         # Deleting field 'ShiftType.timeperiod'
-        db.delete_column('labgeeks_schedule_shifttype', 'timeperiod_id')
+        db.delete_column('labgeeks_horae_shifttype', 'timeperiod_id')
 
     def backwards(self, orm):
 
         # Adding field 'ShiftType.location'
-        db.add_column('labgeeks_schedule_shifttype', 'location', self.gf('django.db.models.fields.related.ForeignKey')(default=Location.objects.create(name='PartyPlace'), to=orm['labgeeks_chronos.Location']), keep_default=False)
+        db.add_column('labgeeks_horae_shifttype', 'location', self.gf('django.db.models.fields.related.ForeignKey')(default=Location.objects.create(name='PartyPlace'), to=orm['labgeeks_chronos.Location']), keep_default=False)
 
         # Adding field 'ShiftType.timeperiod'
-        db.add_column('labgeeks_schedule_shifttype', 'timeperiod', self.gf('django.db.models.fields.related.ForeignKey')(default=TimePeriod.objects.create(name='TimeToParty', slug='timetoparty'), to=orm['labgeeks_schedule.TimePeriod']), keep_default=False)
+        db.add_column('labgeeks_horae_shifttype', 'timeperiod', self.gf('django.db.models.fields.related.ForeignKey')(default=TimePeriod.objects.create(name='TimeToParty', slug='timetoparty'), to=orm['labgeeks_horae.TimePeriod']), keep_default=False)
 
     models = {
         'auth.group': {
@@ -67,26 +67,26 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'labgeeks_schedule.baseshift': {
+        'labgeeks_horae.baseshift': {
             'Meta': {'object_name': 'BaseShift'},
             'day': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'in_time': ('django.db.models.fields.TimeField', [], {}),
             'location': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_chronos.Location']"}),
             'out_time': ('django.db.models.fields.TimeField', [], {}),
-            'shift_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_schedule.ShiftType']", 'null': 'True', 'blank': 'True'}),
-            'timeperiod': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_schedule.TimePeriod']", 'null': 'True', 'blank': 'True'})
+            'shift_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_horae.ShiftType']", 'null': 'True', 'blank': 'True'}),
+            'timeperiod': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_horae.TimePeriod']", 'null': 'True', 'blank': 'True'})
         },
-        'labgeeks_schedule.closedhour': {
+        'labgeeks_horae.closedhour': {
             'Meta': {'object_name': 'ClosedHour'},
             'day': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'in_time': ('django.db.models.fields.TimeField', [], {}),
             'location': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_chronos.Location']"}),
             'out_time': ('django.db.models.fields.TimeField', [], {}),
-            'timeperiod': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_schedule.TimePeriod']"})
+            'timeperiod': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_horae.TimePeriod']"})
         },
-        'labgeeks_schedule.defaultshift': {
+        'labgeeks_horae.defaultshift': {
             'Meta': {'object_name': 'DefaultShift'},
             'day': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -94,15 +94,15 @@ class Migration(SchemaMigration):
             'location': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_chronos.Location']"}),
             'out_time': ('django.db.models.fields.TimeField', [], {}),
             'person': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'}),
-            'timeperiod': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_schedule.TimePeriod']", 'null': 'True', 'blank': 'True'})
+            'timeperiod': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_horae.TimePeriod']", 'null': 'True', 'blank': 'True'})
         },
-        'labgeeks_schedule.shifttype': {
+        'labgeeks_horae.shifttype': {
             'Meta': {'object_name': 'ShiftType'},
             'allowed_groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'symmetrical': 'False'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'})
         },
-        'labgeeks_schedule.timeperiod': {
+        'labgeeks_horae.timeperiod': {
             'Meta': {'object_name': 'TimePeriod'},
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'end_date': ('django.db.models.fields.DateField', [], {'default': 'datetime.date(2012, 8, 16)'}),
@@ -111,7 +111,7 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50', 'db_index': 'True'}),
             'start_date': ('django.db.models.fields.DateField', [], {'default': 'datetime.date(2012, 8, 16)'})
         },
-        'labgeeks_schedule.workshift': {
+        'labgeeks_horae.workshift': {
             'Meta': {'object_name': 'WorkShift'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'location': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_chronos.Location']"}),
@@ -121,4 +121,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['labgeeks_schedule']
+    complete_apps = ['labgeeks_horae']

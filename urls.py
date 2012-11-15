@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 
-urlpatterns = patterns('labgeeks_schedule.views',
+urlpatterns = patterns('labgeeks_horae.views',
                        url(r'^view_preferences/$', 'view_preferences', name="Schedule-View_Prefs"),
                        url(r'^create/$', 'create_default_schedule', name="Schedule-Create_Schedule"),
                        url(r'^shifts/$', 'view_shifts', name="Schedule-View_Shifts"),

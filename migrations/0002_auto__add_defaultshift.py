@@ -9,7 +9,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         
         # Adding model 'DefaultShift'
-        db.create_table('labgeeks_schedule_defaultshift', (
+        db.create_table('labgeeks_horae_defaultshift', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('person', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, blank=True)),
             ('day', self.gf('django.db.models.fields.CharField')(max_length=256)),
@@ -17,13 +17,13 @@ class Migration(SchemaMigration):
             ('out_time', self.gf('django.db.models.fields.TimeField')()),
             ('location', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['labgeeks_chronos.Location'])),
         ))
-        db.send_create_signal('labgeeks_schedule', ['DefaultShift'])
+        db.send_create_signal('labgeeks_horae', ['DefaultShift'])
 
 
     def backwards(self, orm):
         
         # Deleting model 'DefaultShift'
-        db.delete_table('labgeeks_schedule_defaultshift')
+        db.delete_table('labgeeks_horae_defaultshift')
 
 
     models = {
@@ -69,7 +69,7 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'labgeeks_schedule.defaultshift': {
+        'labgeeks_horae.defaultshift': {
             'Meta': {'object_name': 'DefaultShift'},
             'day': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -78,7 +78,7 @@ class Migration(SchemaMigration):
             'out_time': ('django.db.models.fields.TimeField', [], {}),
             'person': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'})
         },
-        'labgeeks_schedule.workshift': {
+        'labgeeks_horae.workshift': {
             'Meta': {'object_name': 'WorkShift'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'location': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_chronos.Location']"}),
@@ -88,4 +88,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['labgeeks_schedule']
+    complete_apps = ['labgeeks_horae']

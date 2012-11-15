@@ -6,8 +6,8 @@ from datetime import datetime
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.test.client import Client
-from labgeeks_schedule import models as p_models
-from labgeeks_schedule import views as p_views
+from labgeeks_horae import models as p_models
+from labgeeks_horae import views as p_views
 from people.models import UserProfile
 
 
