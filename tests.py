@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.test.client import Client
 from labgeeks_horae import models as p_models
 from labgeeks_horae import views as p_views
-from people.models import UserProfile
+from labgeeks_people.models import UserProfile
 
 
 class StartTestCase(TestCase):
