@@ -61,6 +61,7 @@ class DefaultShift(models.Model):
     out_time = models.TimeField()
     location = models.ForeignKey(Location)
     timeperiod = models.ForeignKey(TimePeriod, null=True, blank=True)
+    column = models.IntegerField()
 
     def __unicode__(self):
         if self.person:
@@ -90,6 +91,7 @@ class BaseShift(models.Model):
     location = models.ForeignKey(Location)
     timeperiod = models.ForeignKey(TimePeriod, null=True, blank=True)
     shift_type = models.ForeignKey(ShiftType, null=True, blank=True)
+    column = models.IntegerField(null=True, blank=True)
 
     def __unicode__(self):
         if self.shift_type:

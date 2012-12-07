@@ -195,8 +195,16 @@ function getDefaultShiftData() {
                     var element = $(row.children()[k]);
                     if (!element.is(":empty") && element.text() != 'closed'){
                         var user = element.text(); 
+                        var col = 'c';
+                        for (var l = 1; l <= 10; l++) {
+                            if (element.hasClass(l)) {
+                                col += l;
+                                break;
+                            }
+                        }
+                        var info = [time, col]
                         try{
-                            users[user][day].push(time);
+                            users[user][day].push(info);
                         }catch(err){      
                             users[user] = {
                                 'Monday': [],
@@ -208,7 +216,7 @@ function getDefaultShiftData() {
                                 'Saturday': [],
                                 'Sunday': [],
                             }
-                            users[user][day].push(time);
+                            users[user][day].push(info);
                         }
                     } 
                 }
@@ -226,6 +234,13 @@ function modEmployeeHours(event){
     var user = $('#add_person').children('.add_person')[0].value;
     var schedule_row_time = element.parent().children('.schedule_row_hours')[0].innerHTML; 
     var count = 0;
+    var col = 'c';
+    for (var l = 1; l <= 10; l++) {
+        if (element.hasClass(l)) {
+            col += l;
+            break;
+        }
+    }
     if ($('#add_replace')[0].checked) {
         var new_user = $('#add_person').children('.add_person')[0].value;
         if ($(element).hasClass('Open_Shift')) {
@@ -246,17 +261,21 @@ function modEmployeeHours(event){
         if (in_group){
             
             if(!$(this).is(":empty")) { 
-                var old_user=element.text();
-                index = users[old_user][Day].indexOf(schedule_row_time);
-                if (index != -1) {
-                    users[old_user][Day].splice(index, 1);
+                var old_user=element.text(); 
+                for (var i = 0; i < users[old_user][Day].length; i++) {
+                    if (users[old_user][Day][i][0] == schedule_row_time && users[old_user][Day][i][1]==col) {
+                        users[old_user][Day].splice(i, 1);
+                        
+                    }
                 }
             }
             var user = new_user;
             element.html(user);
+            
+            var info = [schedule_row_time, col]
             try{
                 if (users[user][Day].indexOf(schedule_row_time) == -1) {         
-                    users[user][Day].push(schedule_row_time);
+                    users[user][Day].push(info);
                     users[user][Day].sort(function(a,b){return a-b});
                 }
             }catch(err){      
@@ -271,7 +290,7 @@ function modEmployeeHours(event){
                     'Sunday': [],
                 }
                 if (users[user][Day].indexOf(schedule_row_time) == -1) {
-                    users[user][Day].push(schedule_row_time);
+                    users[user][Day].push(info);
                     users[user][Day].sort();
                 }
             }
@@ -283,11 +302,12 @@ function modEmployeeHours(event){
             }
         }
     }else if ($('#remove')[0].checked && !$(this).is(":empty")){
-        var user = element.text();
-        element.empty();
-        index = users[user][Day].indexOf(schedule_row_time);
-        if (index != -1) {
-            users[user][Day].splice(index, 1);
+        var old_user=element.text();
+        for (var i = 0; i < users[old_user][Day].length; i++) {
+            if (users[old_user][Day][i][0] == schedule_row_time && users[old_user][Day][i][1]==col) {
+                users[old_user][Day].splice(i, 1);
+                element.empty(); 
+            }
         }
     }
 }
@@ -406,22 +426,13 @@ function saveHours(event){
 
             $.ajax({
                 "type"      : 'POST',
-                "url"       : "/schedule/create/save/",
+                "url"       : "/schedule/create/default/save/",
                 "data"      : $.param(value, true), 
                 "error"     : function(){},
                 "success"   : function(data){}
             });
         }
     }
-
-    // Save the closing hours.
-    $.ajax({
-        "type"      : 'POST',
-        "url"       : "/schedule/create/save/",
-        "data"      : $.param(closing_hours, true), 
-        "error"     : function(){},
-        "success"   : function(data){}
-    });
 
     // Update the status.
     var schedule_status = $(".schedule_status");
