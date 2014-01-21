@@ -18,17 +18,19 @@ def list_options(request):
     Lists out the options regarding scheduling. Essentially a home page for the schedule app.
     '''
 
+    params = {'request': request,}
     if not request.user.is_authenticated():
-        message = 'Permission Denied'
-        reason = 'You do not have permission to visit this part of the page.'
-        return render_to_response('fail.html', locals(), context_instance=RequestContext(request))
+        params['message'] = 'Permission Denied'
+        params['reason'] = 'You do not have permission to visit this part of the page.'
+        return render_to_response('fail.html', params, context_instance=RequestContext(request))
 
-    return render_to_response('schedule_home.html', locals(), context_instance=RequestContext(request))
+    return render_to_response('schedule_home.html', params, context_instance=RequestContext(request))
 
 
 def view_available_shifts(request):
     ''' Display a list of all available shifts. (Shifts that have no user attached to them)
     '''
+    params = {'request': request,}
     #Grab all available shifts
     data = WorkShift.objects.filter(person=None)
 
@@ -37,19 +39,23 @@ def view_available_shifts(request):
         x = {'day': shift.scheduled_in.date(), 'scheduled_in': shift.scheduled_in.time(), 'scheduled_out': shift.scheduled_out.time(), 'location': shift.location}
         shifts.append(x)
 
+    params['shifts'] = shifts 
     if not shifts:
         message = "No available shifts."
+        params['message'] = message
 
-    return render_to_response('available.html', locals(), context_instance=RequestContext(request))
+    return render_to_response('available.html', params, context_instance=RequestContext(request))
 
 
 def view_shifts(request):
     ''' Display a list of scheduled work shifts. Allows user to specify which day they want to look at.
     '''
+    params = {'request': request,}
     c = {}
     c.update(csrf(request))
     if request.method == 'POST':
         form = SelectDailyScheduleForm(request.POST)
+        params['form'] = form
         if form.is_valid():
             day = form.cleaned_data['day']
             location = form.cleaned_data['location']
@@ -60,9 +66,12 @@ def view_shifts(request):
                 person__isnull=False,
                 location__name=location
             ).order_by('person__username')
+            params['day'] = day
+            params['location'] = location
 
             if not data:
                 message = 'Nobody scheduled for %s' % (day)
+                params['message'] = message
             else:
 
                 # TODO EDIT LATER
@@ -105,14 +114,19 @@ def view_shifts(request):
                         else:
                             x['people'].append(person)
                     shifts.append(x)
+    
+                params['people'] = people
+                params['shifts'] = shifts
 
                 # The total columns in the schedule.
                 rowlength = len(people) + 1
+                params['rowlength'] = rowlength
 
     else:
         form = SelectDailyScheduleForm()
+        params['form'] = form
 
-    return render_to_response('view_shifts.html', locals(), context_instance=RequestContext(request))
+    return render_to_response('view_shifts.html', params, context_instance=RequestContext(request))
 
 
 @login_required
@@ -121,6 +135,7 @@ def view_timeperiods(request):
     This view returns a list of timeperiods and users who can work in those timeperiods.
     This view also allows users to select which timeperiods they can work for.
     '''
+    params = {'request': request,}
     user = request.user
     try:
         user_profile = UserProfile.objects.get(user=user)
@@ -145,10 +160,14 @@ def view_timeperiods(request):
         }
 
         timeperiod_stats.append(data)
+
+    params['timeperiod_stats'] = timeperiod_stats
+    params['form'] = form
+
     if not timeperiods:
         message = 'Nobody available for timeperiods or nobody filled out preferences'
-
-    return render_to_response('view_timeperiods.html', locals(), context_instance=RequestContext(request))
+        params['message'] = message
+    return render_to_response('view_timeperiods.html', params, context_instance=RequestContext(request))
 
 
 def view_timeperiod_data(request):
@@ -187,9 +206,12 @@ def create_base_schedule(request):
     '''
     This view will allow users to create a schedule from scratch.
     '''
-
+    
+    params = {'request': request,}
     if request.method == 'POST':
         form = CreateDailyScheduleForm(request.POST)
+        params['form'] = form
+
         if form.is_valid():
 
             # Grab the data from the form
@@ -272,15 +294,23 @@ def create_base_schedule(request):
             if request.user.has_perm('labgeeks_horae.add_defaultshift'):
                 can_edit_schedule = True
             else:
-                can_edit_scehdule = False
+                can_edit_schedule = False
+            params['timeperiod'] = timeperiod
+            params['location'] = location
+            params['can_edit_schedule'] = can_edit_schedule
+            params['days'] = days
+            params['schedule'] = schedule
+            params['shift_types'] = shift_types
     else:
         # There is no schedule to display.
         schedule_class = "hidden"
         form = CreateDailyScheduleForm()
         form.fields['timeperiods'].choices = [(tp.name, tp.name) for tp in TimePeriod.objects.all()]
         form.fields['location'].choices = [(loc.name, loc.name) for loc in Location.objects.all()]
+        params['form'] = form
 
-    return render_to_response('create_base_schedule.html', locals(), context_instance=RequestContext(request))
+    params['schedule_class'] = schedule_class
+    return render_to_response('create_base_schedule.html', params(), context_instance=RequestContext(request))
 
 
 def create_default_schedule(request):
@@ -288,8 +318,11 @@ def create_default_schedule(request):
     This view will allow users to create a schedule from scratch.
     '''
 
+    params = {'request': request,}
     if request.method == 'POST':
         form = CreateDailyScheduleForm(request.POST)
+        params['form'] = form
+
         if form.is_valid():
 
             # Grab the data from the form
@@ -495,14 +528,24 @@ def create_default_schedule(request):
                 can_edit_schedule = True
             else:
                 can_edit_scehdule = False
+            params['timeperiod'] = timeperiod
+            params['location'] = location
+            params['can_edit_schedule'] = can_edit_schedule
+            params['days'] = days
+            params['schedule'] = schedule
+            params['Shift_Types'] = shift_types
+            params['base_schedule'] = base_schedule
+
     else:
         # There is no schedule to display.
         schedule_class = "hidden"
         form = CreateDailyScheduleForm()
         form.fields['timeperiods'].choices = [(tp.name, tp.name) for tp in TimePeriod.objects.all()]
         form.fields['location'].choices = [(loc.name, loc.name) for loc in Location.objects.all()]
+        params['form'] = form
 
-    return render_to_response('create_schedule.html', locals(), context_instance=RequestContext(request))
+    params['schedule_class'] = schedule_class
+    return render_to_response('create_schedule.html', params, context_instance=RequestContext(request))
 
 
 def save_base_hours(request):
