@@ -62,8 +62,11 @@ class TimePeriodTestCase(StartTestCase):
         self.client = Client()
         self.client.login(username='user1', password='123')
         timeperiods = p_models.TimePeriod.objects.all()
-        response = self.client.post('/schedule/timeperiods/', {'working_periods': timeperiods[0].id})
-        self.assertTrue(response.context['timeperiods'][0] in timeperiods)
+        response = self.client.post('/schedule/timeperiods/', {'working_periods': timeperiods[0].id}, follow=True)
+        #Checks that rendered content has updated to reflect addition of
+        #working period.
+        self.assertEqual(response.context['timeperiod_stats'][0]['count'], 1)
+        self.assertEqual(response.context['timeperiod_stats'][1]['count'], 0)
         user1_working_periods = self.user_profile1.working_periods.all()
         self.assertEqual(len(user1_working_periods), 1)
         self.assertEqual(user1_working_periods[0].id, timeperiods[0].id)
