@@ -151,22 +151,45 @@ def view_timeperiods(request):
     else:
         form = SelectTimePeriodForm(instance=user_profile)
 
-    for timeperiod in timeperiods:
-        people = UserProfile.objects.filter(working_periods__name=timeperiod.name)
-        data = {
-            'timeperiod': timeperiod.name,
-            'count': people.count(),
-            'slug': timeperiod.slug
-        }
-
-        timeperiod_stats.append(data)
+    if request.method == 'POST':
+        groups = Group.objects.all()
+        for group in groups:
+            if group.name == request.POST.get("group_selection"):
+                group_set = group.user_set.all()
+                for timeperiod in timeperiods:
+                    available_people = []
+                    people = UserProfile.objects.filter(working_periods__name=timeperiod.name)
+                    for person in people:
+                        if person.user in group_set:
+                            available_people.append(person)
+                    people = [str(c.user) for c in available_people]
+                    data = {
+                        'timeperiod': timeperiod.name,
+                        'people_available': people,
+                        'count': len(people),
+                        'slug': timeperiod.slug
+                    }
+                    timeperiod_stats.append(data)
 
     params['timeperiod_stats'] = timeperiod_stats
     params['form'] = form
+    params['group_name'] = request.POST.get("group_selection")
 
     if not timeperiods:
         message = 'Nobody available for timeperiods or nobody filled out preferences'
         params['message'] = message
+
+
+    #Separate out the list of users by their group association.
+    groups = Group.objects.all()
+    group_list = []
+    for group in groups:
+        data = {
+            'group_name': group.name,
+        }
+        group_list.append(data)
+    params['group_list'] = group_list
+
     return render_to_response('view_timeperiods.html', params, context_instance=RequestContext(request))
 
 
@@ -174,21 +197,34 @@ def view_timeperiod_data(request):
     '''
     This method returns json data regarding timeperiods.
     '''
-    data = request.REQUEST.copy()
-    slug = data.getlist('name')[0]
+    if request.method == 'POST':
+        print "got hereeee"
+        data = request.REQUEST.copy()
+        slug = data.getlist('name')[0]
+        print "and here"
+        group_name = data.getlist('group')[0]
+        print "and here also"
 
-    timeperiod = TimePeriod.objects.get(slug=slug)
-    people_list = UserProfile.objects.filter(working_periods__name=timeperiod.name)
-    people = [str(c.user) for c in people_list]
-    result = json.dumps({
-        'timeperiod': timeperiod.name,
-        'start_date': timeperiod.start_date.strftime('%b. %d, %Y'),
-        'end_date': timeperiod.end_date.strftime('%b. %d, %Y'),
-        'count': len(people),
-        'people': people
-    })
+        people_available = []
+        timeperiod = TimePeriod.objects.get(slug=slug)
+        groups = Group.objects.all()
+        for group in groups:
+            if group.name == group_name:
+                group_set = group.user_set.all()
+                people_list = UserProfile.objects.filter(working_perios__name=timeperiod.name)
+                for person in people_list:
+                    if person.user in group_set:
+                        people_available.append(person)
+        people = [str(c.user) for c in people_list]
+        result = json.dumps({
+            'timeperiod': timeperiod.name,
+            'start_date': timeperiod.start_date.strftime('%b. %d, %Y'),
+            'end_date': timeperiod.end_date.strftime('%b. %d, %Y'),
+            'count': len(people),
+            'people': people
+        })
 
-    return HttpResponse(result)
+        return HttpResponse(result)
 
 
 def view_people(request):
