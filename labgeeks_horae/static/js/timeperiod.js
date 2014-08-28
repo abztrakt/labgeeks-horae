@@ -10,17 +10,18 @@ Loads the page with events.
 */
 $(document).ready(function() {
     $(".timeperiod_selector").click(function() {
-        getTimePeriodData(this.title);
+        var group_name = document.getElementById("group_name").innerHTML;
+        getTimePeriodData(this.title, group_name);
     });
 });
 
 /*
 Performs an Ajax call to grab the data. 
 */
-function getTimePeriodData(slug){
+function getTimePeriodData(slug, group_name){
     $.ajax({
         "url"       : "/schedule/timeperiods/info/",
-        "data"      : {"name": slug},
+        "data"      : {"name": slug, "group": group_name},
         "error"     : function(){ $("#timeperiod_info").append("Error, no data associated with this timeperiod")},
         "success"   : function(data) { loadTimePeriodData(data);} 
     });
