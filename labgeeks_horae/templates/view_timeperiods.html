@@ -43,7 +43,7 @@
 
     <div id="view_timeperiods" class="tab_content">
         <form name="group" method="post" action="">{% csrf_token %}
-            <select id="group_selection">
+            <select name="group_selection">
             {% for group in group_list %}
                 <option>{{ group.group_name }}</option>
             {% endfor %}
@@ -56,6 +56,7 @@
             {% for timeperiod in timeperiod_stats %}
                  <div class="timeperiod_info">
                     <h2>{{ timeperiod.timeperiod }}</h2>
+                    <p>({{ timeperiod.start_date }}-{{ timeperiod.end_date }})</p>
                     {% if timeperiod.count == 0 %}
                         <p>There is not anyone that works on your team that can work during this time period.</p>
                     {% else %}

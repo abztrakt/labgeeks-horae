@@ -154,7 +154,8 @@ def view_timeperiods(request):
     if request.method == 'POST':
         groups = Group.objects.all()
         for group in groups:
-            if group.name == request.POST.get("group_selection"):
+            chosen_group = request.POST.get("group_selection")
+            if group.name == chosen_group:
                 group_set = group.user_set.all()
                 for timeperiod in timeperiods:
                     available_people = []
@@ -165,6 +166,8 @@ def view_timeperiods(request):
                     people = [str(c.user) for c in available_people]
                     data = {
                         'timeperiod': timeperiod.name,
+                        'start_date': timeperiod.start_date.strftime('%b. %d, %Y'),
+                        'end_date': timeperiod.end_date.strftime('%b. %d, %Y'),
                         'people_available': people,
                         'count': len(people),
                         'slug': timeperiod.slug
@@ -198,12 +201,9 @@ def view_timeperiod_data(request):
     This method returns json data regarding timeperiods.
     '''
     if request.method == 'POST':
-        print "got hereeee"
         data = request.REQUEST.copy()
         slug = data.getlist('name')[0]
-        print "and here"
         group_name = data.getlist('group')[0]
-        print "and here also"
 
         people_available = []
         timeperiod = TimePeriod.objects.get(slug=slug)
