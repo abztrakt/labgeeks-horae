@@ -2,13 +2,13 @@
 Begin testing for Chronos, import proper libraries and models.
 """
 from django.test import TestCase
-from datetime import datetime
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.test.client import Client
 from labgeeks_horae import models as p_models
 from labgeeks_horae import views as p_views
 from labgeeks_people.models import UserProfile
+import datetime
 
 
 class StartTestCase(TestCase):
