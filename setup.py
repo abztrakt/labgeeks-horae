@@ -10,7 +10,7 @@ setup(
     packages = ['labgeeks_horae',],
     install_requires = [
         'setuptools',
-        'South==0.7.3',
+        'South',
         'labgeeks-people',
         'labgeeks-chronos',
     ],
