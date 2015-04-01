@@ -144,12 +144,6 @@ def view_timeperiods(request):
 
     timeperiod_stats = []
     timeperiods = TimePeriod.objects.all().order_by('start_date')
-    if request.method == 'POST':
-        form = SelectTimePeriodForm(request.POST, instance=user_profile)
-        if form.is_valid():
-            user_profile = form.save()
-    else:
-        form = SelectTimePeriodForm(instance=user_profile)
 
     if request.method == 'POST':
         groups = Group.objects.all()
@@ -175,7 +169,6 @@ def view_timeperiods(request):
                     timeperiod_stats.append(data)
 
     params['timeperiod_stats'] = timeperiod_stats
-    params['form'] = form
     params['group_name'] = request.POST.get("group_selection")
 
     if not timeperiods:
@@ -194,6 +187,31 @@ def view_timeperiods(request):
     params['group_list'] = group_list
 
     return render_to_response('view_timeperiods.html', params, context_instance=RequestContext(request))
+
+
+@login_required
+def edit_timeperiods(request):
+    '''
+    This view allows users to select which timeperiods they can work for.
+    '''
+    params = {'request': request,}
+    user = request.user
+    try:
+        user_profile = UserProfile.objects.get(user=user)
+    except UserProfile.DowsNotExist:
+        return HttpResponseRedirect("/people/%s" % user.username)
+
+    if request.method == 'POST':
+        form = SelectTimePeriodForm(request.POST, instance=user_profile)
+        if form.is_valid():
+            user_profile = form.save()
+        params['message'] = "Your available time periods were successfully updated."
+    else:
+        form = SelectTimePeriodForm(instance=user_profile)
+
+    params['form'] = form
+
+    return render_to_response('edit_timeperiods.html', params, context_instance=RequestContext(request))
 
 
 def view_timeperiod_data(request):

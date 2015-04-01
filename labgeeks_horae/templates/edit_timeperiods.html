@@ -1,0 +1,31 @@
+{% extends "schedule_base.html" %}
+
+{% block pageJS %}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="section">
+    <h1>Schedule</h1>
+    <h2>Below are timeperiods and any data associaated with them.</h2>
+    <a href="/schedule/">Click here to go back</a>
+</div>
+
+{% if message %}
+<div class="alert-info alert"><strong>Success!</strong> {{message}}</div>
+{% endif %}
+
+<div class="form_box">
+    <form action="" method="post" encrtype="multipart/form-data">{% csrf_token %}
+        {% for field in form.visible_fields %}
+            <label class="input_label">
+                <strong>{{field.label_tag}}</strong>
+                <p>{{field.help_text}}</p>
+            </label>
+            {{field}}
+        {% endfor %}
+        <input type="submit" class="btn btn-primary" value="Save" />
+    </form>
+</div>
+{% endblock %}
