@@ -15,14 +15,22 @@
 </div>
 
     <div id="view_timeperiods" class="tab_content">
-        <form name="group" method="post" action="">{% csrf_token %}
-            <select name="group_selection">
-            {% for group in group_list %}
-                <option>{{ group.group_name }}</option>
-            {% endfor %}
-            </select>
-            <input type="submit" value="Submit" />
+        <div class="row">
+        <form name="group" id="group_selection" method="post" action="" class="col-lg-2 col-md-3 col-sm-5 col-xs-9">{% csrf_token %}
+            <div class="form-group">
+                <label for="group_selection">Pick a Group:</label>
+                <select name="group_selection" class="form-control" id="group_selection">
+                    {% for group in group_list %}
+                        <option>{{ group.group_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Submit" class="btn btn-primary" />
+            </div>
         </form>
+        </div>
+        <div class="row">
         {% if timeperiod_stats %}
             <h1 id="group_name">{{ group_name }}</h1>
             {% for timeperiod in timeperiod_stats %}
@@ -46,6 +54,7 @@
                 <h2>{{message}}</h2>
             </div>
         {% endif %}
+        </div>
     </div>
 
 {% endblock %}
