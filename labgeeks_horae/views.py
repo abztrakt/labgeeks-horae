@@ -10,7 +10,7 @@ from labgeeks_horae.models import *
 from labgeeks_horae.forms import SelectTimePeriodForm, SelectDailyScheduleForm, CreateDailyScheduleForm
 from django import forms
 import json
-import datetime
+from datetime import date, datetime, timedelta
 
 
 def list_options(request):
@@ -79,11 +79,11 @@ def view_shifts(request):
                 y_axis = []
 
                 # y_axis - The time scale
-                counter = datetime.datetime(day.year, day.month, day.day, 7, 0)
+                counter = datetime(day.year, day.month, day.day, 7, 0)
 
                 while counter.hour != 1:
                     y_axis.append(counter.time())
-                    counter += datetime.timedelta(minutes=30)
+                    counter += timedelta(minutes=30)
 
                 #Grab the unique users from the shifts.
                 unique_people = data.values('person__username').distinct()
@@ -93,7 +93,7 @@ def view_shifts(request):
 
                 # Content - fill in the grid with the user's name to show that they are working that time frame.
                 shifts = []
-                now = datetime.datetime.time(datetime.datetime.now())
+                now = datetime.time(datetime.now())
 
                 for time in y_axis:
                     x = {'time': time.strftime('%I:%M %p').lower(), 'people': [], 'class': "row"}
@@ -147,26 +147,30 @@ def view_timeperiods(request):
 
     if request.method == 'POST':
         groups = Group.objects.all()
+        group_set = False
         for group in groups:
             chosen_group = request.POST.get("group_selection")
             if group.name == chosen_group:
                 group_set = group.user_set.all()
-                for timeperiod in timeperiods:
-                    available_people = []
-                    people = UserProfile.objects.filter(working_periods__name=timeperiod.name)
-                    for person in people:
-                        if person.user in group_set:
-                            available_people.append(person)
-                    people = [str(c.user) for c in available_people]
-                    data = {
-                        'timeperiod': timeperiod.name,
-                        'start_date': timeperiod.start_date.strftime('%b. %d, %Y'),
-                        'end_date': timeperiod.end_date.strftime('%b. %d, %Y'),
-                        'people_available': people,
-                        'count': len(people),
-                        'slug': timeperiod.slug
-                    }
-                    timeperiod_stats.append(data)
+            elif chosen_group == "None":
+                group_set = User.objects.filter(groups=None)
+        if group_set:
+            for timeperiod in timeperiods:
+                available_people = []
+                people = UserProfile.objects.filter(working_periods__name=timeperiod.name)
+                for person in people:
+                    if person.user in group_set:
+                        available_people.append(person)
+                people = [str(c.user) for c in available_people]
+                data = {
+                    'timeperiod': timeperiod.name,
+                    'start_date': timeperiod.start_date.strftime('%b. %d, %Y'),
+                    'end_date': timeperiod.end_date.strftime('%b. %d, %Y'),
+                    'people_available': people,
+                    'count': len(people),
+                    'slug': timeperiod.slug
+                }
+                timeperiod_stats.append(data)
 
     params['timeperiod_stats'] = timeperiod_stats
     params['group_name'] = request.POST.get("group_selection")
@@ -300,11 +304,11 @@ def create_base_schedule(request):
                 column = shift.column
                 hours = []
 
-                current = datetime.datetime(1, 1, 1, in_time.hour, in_time.minute)
+                current = datetime(1, 1, 1, in_time.hour, in_time.minute)
 
                 while current.time() != out_time:
                     hours.append(current.time())
-                    current += datetime.timedelta(minutes=30)
+                    current += timedelta(minutes=30)
                 if shift.shift_type:
                     base_shift_ranges[day].append({'hours': hours, 'name': shift.shift_type.name, 'column': column})
                 else:
@@ -316,7 +320,7 @@ def create_base_schedule(request):
                 base_shift_range = base_shift_ranges[day]
                 times = []
                 base_times = []
-                counter = datetime.datetime(1, 1, 1, 7, 45)
+                counter = datetime(1, 1, 1, 7, 45)
 
                 # Loop through the time and start appending the rows to each time.
                 while counter.hour != 0:
@@ -338,7 +342,7 @@ def create_base_schedule(request):
                     base_times.append({'time': counter.time().strftime('%I:%M %p').lower(), 'row': base_row})
 
                     # Increment by 30 minutes
-                    counter += datetime.timedelta(minutes=30)
+                    counter += timedelta(minutes=30)
 
                 # Append the time row to the schedule.
                 schedule.append({'times': base_times, 'day': day})
@@ -444,11 +448,11 @@ def create_default_schedule(request):
                 out_time = closing_hour.out_time
                 hours = []
 
-                current = datetime.datetime(1,1,1,in_time.hour,in_time.minute)
+                current = datetime(1,1,1,in_time.hour,in_time.minute)
 
                 while current.time() != out_time:
                     hours.append(current.time())
-                    current += datetime.timedelta(minutes=30)
+                    current += timedelta(minutes=30)
                 hours.append(current.time())
 
                 closing_ranges[day] += hours
@@ -459,11 +463,11 @@ def create_default_schedule(request):
                 out_time = shift.out_time
                 hours = []
 
-                current = datetime.datetime(1, 1, 1, in_time.hour, in_time.minute)
+                current = datetime(1, 1, 1, in_time.hour, in_time.minute)
 
                 while current.time() != out_time:
                     hours.append(current.time())
-                    current += datetime.timedelta(minutes=30)
+                    current += timedelta(minutes=30)
                 base_shift_hours[day] += hours
                 if shift.shift_type:
                     groups = ''
@@ -513,11 +517,11 @@ def create_default_schedule(request):
                     column = shift.column
                     hours = []
 
-                    current = datetime.datetime(1, 1, 1, in_time.hour, in_time.minute)
+                    current = datetime(1, 1, 1, in_time.hour, in_time.minute)
 
                     while current.time() != out_time:
                         hours.append(current.time())
-                        current += datetime.timedelta(minutes=30)
+                        current += timedelta(minutes=30)
 
                     shift_ranges[day].append({'hours': hours, 'column': column, 'user': shift.person.username})
             # TODO: For now, create an arbitrary size for the schedule. Consider changing it in the future.
@@ -530,7 +534,7 @@ def create_default_schedule(request):
                 base_shift_range = base_shift_ranges[day]
                 times = []
                 base_times = []
-                counter = datetime.datetime(1, 1, 1, 7, 45)
+                counter = datetime(1, 1, 1, 7, 45)
 
                 # Loop through the time and start appending the rows to each time.
                 while counter.hour != 0:
@@ -569,7 +573,7 @@ def create_default_schedule(request):
                     base_times.append({'time': counter.time().strftime('%I:%M %p').lower(), 'row': base_row})
 
                     # Increment by 30 minutes
-                    counter += datetime.timedelta(minutes=30)
+                    counter += timedelta(minutes=30)
 
                 # Append the time row to the schedule.
                 schedule.append({'times': times, 'day': day})
@@ -728,12 +732,12 @@ def save_default_hours(request):
                     for day1 in shift_days:
                         in_time1 = in_time
                         while in_time1 != out_time:
-                            time_in = datetime.datetime(day1.year, day1.month, day1.day, in_time1.hour, in_time1.minute)
+                            time_in = datetime(day1.year, day1.month, day1.day, in_time1.hour, in_time1.minute)
                             if in_time1.minute == 45:
                                 in_time1 = in_time1.replace(hour=in_time1.hour + 1, minute=15)
                             elif in_time1.minute == 15:
                                 in_time1 = in_time1.replace(minute=45)
-                            time_out = datetime.datetime(day1.year, day1.month, day1.day, in_time1.hour, in_time1.minute)
+                            time_out = datetime(day1.year, day1.month, day1.day, in_time1.hour, in_time1.minute)
                             employee_work_hour = WorkShift.objects.create(
                                 person=user,
                                 scheduled_in=time_in,
@@ -783,11 +787,11 @@ def return_default_time_ranges(hours_list):
     hours_list1 = []
     for hour in hours_list:
         hour = hour.split(',')
-        hour[0] = datetime.datetime.strptime(hour[0], time_format)
+        hour[0] = datetime.strptime(hour[0], time_format)
         hours_list1.append(hour)
     hours_list1.sort()
     for hour in hours_list1:
-        #current = datetime.datetime.strptime(hour,time_format)
+        #current = datetime.strptime(hour,time_format)
         current = hour[0]
         new_column = hour[1]
         if not in_time and not out_time:
@@ -833,11 +837,11 @@ def return_base_time_ranges(hours_list):
     out_time = None
     hours_list1 = []
     for hour in hours_list:
-        hour = datetime.datetime.strptime(hour, time_format)
+        hour = datetime.strptime(hour, time_format)
         hours_list1.append(hour)
     hours_list1.sort()
     for hour in hours_list1:
-        #current = datetime.datetime.strptime(hour,time_format)
+        #current = datetime.strptime(hour,time_format)
         current = hour
         if not in_time and not out_time:
             in_time = current
