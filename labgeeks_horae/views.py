@@ -147,14 +147,16 @@ def view_timeperiods(request):
 
     if request.method == 'POST':
         groups = Group.objects.all()
-        group_set = False
+        group_found = False
         for group in groups:
             chosen_group = request.POST.get("group_selection")
             if group.name == chosen_group:
+                group_found = True
                 group_set = group.user_set.all()
             elif chosen_group == "None":
+                group_found = True
                 group_set = User.objects.filter(groups=None)
-        if group_set:
+        if group_found:
             for timeperiod in timeperiods:
                 available_people = []
                 people = UserProfile.objects.filter(working_periods__name=timeperiod.name)
