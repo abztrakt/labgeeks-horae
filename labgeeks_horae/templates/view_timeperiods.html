@@ -14,8 +14,8 @@
     <a href="/schedule/">Click here to go back</a>
 </div>
 
-    <div id="view_timeperiods" class="tab_content">
-        <div class="row">
+<div id="view_timeperiods" class="tab_content">
+    <div class="row">
         <form name="group" id="group_selection" method="post" action="" class="col-lg-2 col-md-3 col-sm-5 col-xs-9">{% csrf_token %}
             <div class="form-group">
                 <label for="group_selection">Pick a Group:</label>
@@ -23,39 +23,44 @@
                     {% for group in group_list %}
                         <option>{{ group.group_name }}</option>
                     {% endfor %}
-                        <option>None</option>
+                        <option value="None">Users with no group associated with them</option>
                 </select>
             </div>
             <div class="form-group">
                 <input type="submit" value="Submit" class="btn btn-primary" />
             </div>
         </form>
-        </div>
-        <div class="row">
-        {% if timeperiod_stats %}
-            <h1 id="group_name">{{ group_name }}</h1>
-            {% for timeperiod in timeperiod_stats %}
-                 <div class="timeperiod_info">
-                    <h2>{{ timeperiod.timeperiod }}</h2>
-                    <p>({{ timeperiod.start_date }}-{{ timeperiod.end_date }})</p>
-                    {% if timeperiod.count == 0 %}
-                        <p>There is not anyone that works on your team that can work during this time period.</p>
-                    {% else %}
-                        <p>{{ timeperiod.count }} can work during this time period.<br />
-                            People:<br />
-                            <ul>
-                        {% for person in timeperiod.people_available %}
-                            <li>{{ person }}</li>
-                        {% endfor %}</ul></p>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        {% else %}
-            <div class="section">
-                <h2>{{message}}</h2>
-            </div>
-        {% endif %}
-        </div>
     </div>
+    <div class="row">
+    {% if timeperiod_stats %}
+        <h1 id="group_name">{{ group_name }}</h1>
+        <div id="timeperiod-view">
+            {% for timeperiod in timeperiod_stats %}
+                <p><a class="btn btn-info" data-toggle="collapse" href="#{{ timeperiod.slug}}" aria-expanded="false" aria-controls="{{timeperiod.slug }}"><strong>{{ timeperiod.timeperiod }}</strong> ({{ timeperiod.count }})<br />{{ timeperiod.start_date }} - {{ timeperiod.end_date }}</a></p>
+                <div class="collapse col-lg-6 col-md-6 col-sm-12 col-xs-12" id="{{ timeperiod.slug }}">
+                    <div class="well">
+                        {% if timeperiod.count == 0 %}
+                            <p>No one in this group is available to work during this time period.</p>
+                        {% else %}
+                            <p>{{ timeperiod.count }} people are available to work during this time period.<br />
+                            People:<br />
+                                <ul>
+                                {% for person in timeperiod.people_available %}
+                                    <li>{{ person }}</li>
+                                {% endfor %}
+                                </ul>
+                            </p>
+                        {% endif %}
+                    </div> <!-- .well -->
+                </div> <!-- .collapse -->
+            {% endfor %}
+        </div> <!-- #timeperiod-view -->
+    {% else %}
+        <div class="section">
+            <h2>{{message}}</h2>
+        </div>
+    {% endif %}
+    </div> <!-- .row -->
+</div> <!-- .tab_contents -->
 
 {% endblock %}
